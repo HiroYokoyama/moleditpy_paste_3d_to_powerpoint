@@ -9,7 +9,9 @@
 A [MoleditPy](https://github.com/HiroYokoyama/python_molecular_editor) plugin that copies the
 3D view to the clipboard as a **native PowerPoint 3D model**. Paste it with Ctrl+V and it can be
 rotated on the slide, and with the Turntable animation it spins during the slide show. It works
-offline, needs no add-in at presentation time and does not drive PowerPoint.
+offline, needs no add-in at presentation time and does not drive PowerPoint. The same model can
+also be exported as a glTF (`.glb`) file for PowerPoint's Insert > 3D Models or any other glTF
+viewer.
 
 ![MoleditPy 3D view and the same scene pasted into PowerPoint](img/moleditpy_vs_powerpoint.png)
 
