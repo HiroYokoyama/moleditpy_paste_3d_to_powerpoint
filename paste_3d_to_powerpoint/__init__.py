@@ -34,7 +34,7 @@ PLUGIN_SUPPORTED_PYTHON_VERSION = ">=3.9, <3.15"
 
 COPY_LABEL = "Copy 3D to PowerPoint"
 EXPORT_LABEL = "Export 3D Scene as glTF (.glb)..."
-SETTINGS_LABEL = "Paste 3D to PowerPoint Settings..."
+SETTINGS_MENU_PATH = "Settings/Paste 3D to PowerPoint..."
 WINDOW_ID = "paste_3d_to_powerpoint_settings"
 
 _context = None
@@ -173,7 +173,7 @@ def export_glb(*_args) -> bool:
 
 
 def open_settings(*_args) -> None:
-    """Export-menu action: show the settings window (one at a time)."""
+    """Settings-menu action: show the settings window (one at a time)."""
     from .settings import save_settings
     from .settings_dialog import SettingsDialog
 
@@ -193,10 +193,10 @@ def open_settings(*_args) -> None:
 
 
 def initialize(context):
-    """Register the Export-menu actions."""
+    """Copy and glTF export go to the Export menu, the settings to the Settings menu."""
     global _context
     _context = context
     current_settings.clear()
     context.add_export_action(COPY_LABEL, copy_to_powerpoint)
     context.add_export_action(EXPORT_LABEL, export_glb)
-    context.add_export_action(SETTINGS_LABEL, open_settings)
+    context.add_menu_action(SETTINGS_MENU_PATH, open_settings)

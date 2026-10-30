@@ -11,10 +11,14 @@ class FakeContext:
     def __init__(self, plotter=None):
         self.plotter = plotter
         self.export_actions = []
+        self.menu_actions = []
         self.messages = []
 
     def add_export_action(self, label, callback):
         self.export_actions.append((label, callback))
+
+    def add_menu_action(self, path, callback):
+        self.menu_actions.append((path, callback))
 
     def show_status_message(self, message, timeout=3000):
         self.messages.append(message)
@@ -37,11 +41,13 @@ def test_initialize_registers_the_export_actions():
     assert [label for label, _ in ctx.export_actions] == [
         plugin.COPY_LABEL,
         plugin.EXPORT_LABEL,
-        plugin.SETTINGS_LABEL,
     ]
     assert ctx.export_actions[0][1] is plugin.copy_to_powerpoint
     assert ctx.export_actions[1][1] is plugin.export_glb
-    assert ctx.export_actions[2][1] is plugin.open_settings
+    # Settings live in the menu bar's Settings menu, not in the Export button.
+    assert ctx.menu_actions == [
+        ("Settings/Paste 3D to PowerPoint...", plugin.open_settings)
+    ]
 
 
 def test_copy_without_3d_view_warns(monkeypatch):
