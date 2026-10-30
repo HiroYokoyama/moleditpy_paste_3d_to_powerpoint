@@ -162,3 +162,14 @@ def test_roughness_follows_specular_strength():
     assert scene_capture._roughness_from_vtk(prop) == pytest.approx(0.55)
     pbr = SimpleNamespace(GetInterpolation=lambda: 3, GetRoughness=lambda: 0.3)
     assert scene_capture._roughness_from_vtk(pbr) == 0.3
+
+
+def test_only_line_actors_are_marked_as_lines():
+    line = vtk.vtkLineSource()
+    scene = scene_capture.capture_scene(
+        FakePlotter({"edge": _actor(line), "ball": _actor(vtk.vtkSphereSource())})
+    )
+    marks = sorted(bool(p.extras.get("line")) for p in scene.primitives)
+    assert marks == [False, True]
+    wire = _actor(vtk.vtkSphereSource(), rep=1)
+    assert scene_capture.is_line_actor(wire)

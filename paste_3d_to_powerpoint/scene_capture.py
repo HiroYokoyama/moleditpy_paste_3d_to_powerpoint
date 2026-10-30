@@ -276,7 +276,29 @@ def _split_by_color(name, pts, nrm, tris, tri_rgba, roughness, metallic, opacity
     return out
 
 
+def is_line_actor(actor: Any) -> bool:
+    """True for actors drawn as lines (unit-cell edges, axes, wireframes)."""
+    if actor.GetProperty().GetRepresentation() == REP_WIREFRAME:
+        return True
+    poly = _polydata_of(actor)
+    if poly is None or not hasattr(poly, "GetNumberOfLines"):
+        return False
+    return (
+        poly.GetNumberOfLines() > 0
+        and poly.GetNumberOfPolys() + poly.GetNumberOfStrips() == 0
+    )
+
+
 def actor_primitives(actor: Any, name: str, tube_radius: float) -> List[Primitive]:
+    """Primitives for one visible actor; tubes made from lines get extras["line"]."""
+    prims = _actor_primitives(actor, name, tube_radius)
+    if prims and is_line_actor(actor):
+        for prim in prims:
+            prim.extras["line"] = True
+    return prims
+
+
+def _actor_primitives(actor: Any, name: str, tube_radius: float) -> List[Primitive]:
     """Primitives for one visible actor (empty if it has no exportable mesh)."""
     import numpy as np
 

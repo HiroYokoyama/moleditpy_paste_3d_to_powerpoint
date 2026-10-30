@@ -6,3 +6,4 @@ dist/
 build/
 *.egg-info/
 .ruff_cache/
+paste_3d_to_powerpoint/settings.json

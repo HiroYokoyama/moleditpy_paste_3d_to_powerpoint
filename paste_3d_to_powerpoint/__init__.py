@@ -34,13 +34,19 @@ PLUGIN_SUPPORTED_PYTHON_VERSION = ">=3.9, <3.15"
 
 COPY_LABEL = "Copy 3D to PowerPoint"
 EXPORT_LABEL = "Export 3D Scene as glTF (.glb)..."
-
-# PowerPoint only has perspective cameras; a narrow field of view stands in
-# for MoleditPy's parallel projection.
-PARALLEL_FOV_DEG = 10.0
-PASTE_SIZE_PT = 360.0
+SETTINGS_LABEL = "Paste 3D to PowerPoint Settings..."
+WINDOW_ID = "paste_3d_to_powerpoint_settings"
 
 _context = None
+current_settings = {}
+
+
+def _settings() -> dict:
+    if not current_settings:
+        from .settings import load_settings
+
+        current_settings.update(load_settings())
+    return current_settings
 
 
 def _status(message: str) -> None:
@@ -69,7 +75,12 @@ def _capture():
         _warn(PLUGIN_NAME, "The 3D view is not available.")
         return None, None
     try:
-        return capture_scene(plotter, parallel_fov_deg=PARALLEL_FOV_DEG), plotter
+        from .settings import apply_line_color
+
+        settings = _settings()
+        scene = capture_scene(plotter, parallel_fov_deg=settings["parallel_fov_deg"])
+        apply_line_color(scene.primitives, settings)
+        return scene, plotter
     except ValueError as exc:
         _warn(PLUGIN_NAME, f"{exc}\nShow a structure in the 3D view first.")
     except Exception as exc:
@@ -97,8 +108,15 @@ def copy_to_powerpoint(*_args) -> bool:
             scene.primitives, generator=f"MoleditPy {PLUGIN_NAME} {PLUGIN_VERSION}"
         )
         lo, hi = bounds(scene.primitives)
+        settings = _settings()
         gvml = build_gvml(
-            glb, hi - lo, (lo + hi) / 2, fov_deg=scene.fov_deg, size_pt=PASTE_SIZE_PT
+            glb,
+            hi - lo,
+            (lo + hi) / 2,
+            fov_deg=scene.fov_deg,
+            size_pt=settings["paste_size_pt"],
+            light_preset=settings["light_preset"],
+            brightness=settings["brightness"],
         )
         copy_to_clipboard(gvml, glb, screenshot_image(plotter))
     except Exception as exc:
@@ -154,9 +172,31 @@ def export_glb(*_args) -> bool:
     return True
 
 
+def open_settings(*_args) -> None:
+    """Export-menu action: show the settings window (one at a time)."""
+    from .settings import save_settings
+    from .settings_dialog import SettingsDialog
+
+    if _context is not None:
+        existing = _context.get_window(WINDOW_ID)
+        if existing is not None and existing.isVisible():
+            existing.raise_()
+            existing.activateWindow()
+            return
+    parent = _context.get_main_window() if _context is not None else None
+    dlg = SettingsDialog(
+        parent, _settings(), on_change=save_settings, on_copy=copy_to_powerpoint
+    )
+    if _context is not None:
+        _context.register_window(WINDOW_ID, dlg)
+    dlg.show()
+
+
 def initialize(context):
-    """Register the two Export-menu actions."""
+    """Register the Export-menu actions."""
     global _context
     _context = context
+    current_settings.clear()
     context.add_export_action(COPY_LABEL, copy_to_powerpoint)
     context.add_export_action(EXPORT_LABEL, export_glb)
+    context.add_export_action(SETTINGS_LABEL, open_settings)

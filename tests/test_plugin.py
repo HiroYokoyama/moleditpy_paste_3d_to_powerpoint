@@ -31,15 +31,17 @@ def test_metadata():
     assert not hasattr(plugin, "run"), "run() would add a duplicate Plugins-menu entry"
 
 
-def test_initialize_registers_both_export_actions():
+def test_initialize_registers_the_export_actions():
     ctx = FakeContext()
     plugin.initialize(ctx)
     assert [label for label, _ in ctx.export_actions] == [
         plugin.COPY_LABEL,
         plugin.EXPORT_LABEL,
+        plugin.SETTINGS_LABEL,
     ]
     assert ctx.export_actions[0][1] is plugin.copy_to_powerpoint
     assert ctx.export_actions[1][1] is plugin.export_glb
+    assert ctx.export_actions[2][1] is plugin.open_settings
 
 
 def test_copy_without_3d_view_warns(monkeypatch):
@@ -87,6 +89,61 @@ def test_copy_puts_gvml_and_glb_on_the_clipboard(monkeypatch):
     assert z.read("clipboard/media/model3d1.glb") == copied["glb"]
     assert 'fov="600000"' in z.read("clipboard/drawings/drawing1.xml").decode()
     assert "Ctrl+V" in ctx.messages[-1] and "1 object(s)" in ctx.messages[-1]
+
+
+def test_copy_uses_saved_lighting_size_and_line_color(monkeypatch, isolated_settings):
+    from paste_3d_to_powerpoint import clipboard, scene_capture, settings
+
+    settings.save_settings(
+        {
+            "light_preset": "key",
+            "brightness": 0.5,
+            "paste_size_pt": 144,
+            "override_line_color": True,
+            "line_color": "#ff0000",
+            "parallel_fov_deg": 7,
+        }
+    )
+    plugin.initialize(FakeContext(plotter=object()))
+    scene = _fake_scene()
+    scene.primitives[0].extras["line"] = True
+    seen = {}
+
+    def fake_capture(plotter, parallel_fov_deg):
+        seen["fov"] = parallel_fov_deg
+        return scene
+
+    monkeypatch.setattr(scene_capture, "capture_scene", fake_capture)
+    copied = {}
+    monkeypatch.setattr(
+        clipboard,
+        "copy_to_clipboard",
+        lambda gvml, glb, image: copied.update(gvml=gvml),
+    )
+    monkeypatch.setattr(clipboard, "screenshot_image", lambda plotter: None)
+
+    assert plugin.copy_to_powerpoint() is True
+    assert seen["fov"] == 7.0
+    assert tuple(scene.primitives[0].color[:3]) == (1.0, 0.0, 0.0)
+    drawing = zipfile.ZipFile(io.BytesIO(copied["gvml"])).read(
+        "clipboard/drawings/drawing1.xml"
+    )
+    assert drawing.count(b"<am3d:ptLight") == 1  # single key light
+    assert b'<am3d:intensity n="4000000"' in drawing  # 8.0 x 0.5
+    assert b'cx="1828800"' in drawing  # 144 pt
+
+
+def test_settings_window_is_a_singleton(monkeypatch, qapp):
+    ctx = FakeContext()
+    windows = {}
+    ctx.get_window = windows.get
+    ctx.register_window = windows.__setitem__
+    plugin.initialize(ctx)
+    plugin.open_settings()
+    first = windows[plugin.WINDOW_ID]
+    plugin.open_settings()
+    assert windows[plugin.WINDOW_ID] is first
+    first.close()
 
 
 def test_export_writes_glb(monkeypatch, tmp_path):
