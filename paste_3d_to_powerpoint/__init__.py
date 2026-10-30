@@ -26,9 +26,8 @@ PLUGIN_NAME = "Paste 3D to PowerPoint"
 PLUGIN_VERSION = "0.1.0"
 PLUGIN_AUTHOR = "HiroYokoyama"
 PLUGIN_DESCRIPTION = (
-    "Copy the 3D view (molecules, crystals, orbitals) as a native PowerPoint 3D "
-    "model via the Windows clipboard, with adjustable lighting, or export it as "
-    "glTF (.glb), keeping the on-screen style."
+    "Copy the 3D view as a native PowerPoint 3D model (Windows clipboard) "
+    "or export it as glTF (.glb)."
 )
 PLUGIN_CATEGORY = "Export"
 PLUGIN_TAGS = ["File", "Visualization"]
