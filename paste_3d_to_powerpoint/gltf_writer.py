@@ -103,6 +103,9 @@ def build_glb(primitives: List[Primitive], generator: str = "MoleditPy") -> byte
         idx = np.ascontiguousarray(prim.indices, dtype=np.uint32).ravel()
         if len(pos) == 0 or len(idx) == 0:
             continue
+        if not np.isfinite(pos).all():
+            # json.dumps would write NaN into "min"/"max", which is not JSON.
+            raise ValueError(f"Non-finite vertex positions in {prim.name}.")
         lengths = np.linalg.norm(nrm, axis=1, keepdims=True)
         nrm = np.where(
             lengths > 1e-12, nrm / np.maximum(lengths, 1e-12), [0.0, 0.0, 1.0]

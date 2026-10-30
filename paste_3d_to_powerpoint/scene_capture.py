@@ -63,6 +63,11 @@ def camera_frame(plotter: Any):
     back = pos - focal
     back /= np.linalg.norm(back)
     right = np.cross(up, back)
+    if np.linalg.norm(right) < 1e-9:
+        # View-up parallel to the view direction: any perpendicular up will do,
+        # whereas normalizing the zero vector would turn the model into NaN.
+        fallback = np.eye(3)[np.argmin(np.abs(back))]
+        right = np.cross(fallback, back)
     right /= np.linalg.norm(right)
     true_up = np.cross(back, right)
     return np.vstack([right, true_up, back])
@@ -116,13 +121,11 @@ def _attach_mapped_colors(actor: Any, poly: Any) -> Optional[str]:
     mapper = actor.GetMapper()
     if not mapper.GetScalarVisibility():
         return None
-    mapper_input = (
-        mapper.GetInputAsDataSet()
-        if hasattr(mapper, "GetInputAsDataSet")
-        else mapper.GetInput()
-    )
+    # Map the surface actually exported, not the mapper input: for a volume
+    # dataset the extracted surface has other cells (faces, not tetrahedra), so
+    # colors mapped on the input would not line up and fall back to flat gray.
     try:
-        colors = mapper.MapScalars(mapper_input, 1.0)
+        colors = mapper.MapScalars(poly, 1.0)
     except TypeError:
         colors = mapper.MapScalars(1.0)
     if colors is None or colors.GetNumberOfTuples() == 0:

@@ -143,3 +143,11 @@ def test_gvml_escapes_name_and_rejects_flat_extent():
     assert 'name="A &amp; &quot;B&quot; &lt;c&gt;"' in drawing
     with pytest.raises(ValueError):
         build_gvml(b"", (0, 0, 0))
+
+
+def test_non_finite_positions_are_rejected_instead_of_writing_invalid_json():
+    tri = _triangle()
+    tri.positions = tri.positions.copy()
+    tri.positions[0, 0] = np.nan
+    with pytest.raises(ValueError, match="Non-finite"):
+        build_glb([tri])

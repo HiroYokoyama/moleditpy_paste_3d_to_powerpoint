@@ -19,11 +19,12 @@ see the LICENSE file in the repository above for the full terms.
 
 import logging
 import os
+import sys
 
 logger = logging.getLogger(__name__)
 
 PLUGIN_NAME = "Paste 3D to PowerPoint"
-PLUGIN_VERSION = "0.1.0"
+PLUGIN_VERSION = "0.1.1"
 PLUGIN_AUTHOR = "HiroYokoyama"
 PLUGIN_DESCRIPTION = (
     "Copy the 3D view as a native PowerPoint 3D model (Windows clipboard) "
@@ -127,9 +128,18 @@ def copy_to_powerpoint(*_args) -> bool:
         logger.exception("%s: copy failed", PLUGIN_NAME)
         _warn(PLUGIN_NAME, f"Could not copy the 3D model:\n{exc}")
         return False
-    _status(
-        "3D model copied - paste it into PowerPoint with Ctrl+V" + _skipped_note(scene)
-    )
+    if sys.platform == "win32":
+        _status(
+            "3D model copied - paste it into PowerPoint with Ctrl+V"
+            + _skipped_note(scene)
+        )
+    else:
+        # The Office clipboard format only exists under its Windows name, so
+        # Ctrl+V in PowerPoint here would paste just the bitmap.
+        _status(
+            "3D model copied as glTF; pasting it into PowerPoint as a 3D model needs "
+            f"Windows - use {EXPORT_LABEL.rstrip('.')} instead" + _skipped_note(scene)
+        )
     return True
 
 

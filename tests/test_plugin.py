@@ -29,7 +29,7 @@ class FakeContext:
 
 def test_metadata():
     assert plugin.PLUGIN_NAME == "Paste 3D to PowerPoint"
-    assert plugin.PLUGIN_VERSION == "0.1.0"
+    assert plugin.PLUGIN_VERSION == "0.1.1"
     assert plugin.PLUGIN_SUPPORTED_MOLEDITPY_VERSION == ">=5.0.0, <6.0.0"
     assert isinstance(plugin.PLUGIN_TAGS, list) and plugin.PLUGIN_TAGS
     assert not hasattr(plugin, "run"), "run() would add a duplicate Plugins-menu entry"
@@ -88,6 +88,7 @@ def test_copy_puts_gvml_and_glb_on_the_clipboard(monkeypatch):
         lambda gvml, glb, image: copied.update(gvml=gvml, glb=glb),
     )
     monkeypatch.setattr(clipboard, "screenshot_image", lambda plotter: None)
+    monkeypatch.setattr(plugin.sys, "platform", "win32")
 
     assert plugin.copy_to_powerpoint() is True
     assert copied["glb"][:4] == b"glTF"
@@ -192,3 +193,22 @@ def test_default_path_follows_the_open_file(monkeypatch):
     ctx.get_main_window = lambda: mw
     plugin.initialize(ctx)
     assert plugin._default_glb_path().replace("\\", "/") == "C:/work/benzene.glb"
+
+
+@pytest.mark.parametrize("platform", ["darwin", "linux"])
+def test_copy_off_windows_does_not_promise_a_powerpoint_paste(monkeypatch, platform):
+    """Only the Windows clipboard carries the Office format; elsewhere point to .glb."""
+    from paste_3d_to_powerpoint import clipboard, scene_capture
+
+    ctx = FakeContext(plotter=object())
+    plugin.initialize(ctx)
+    monkeypatch.setattr(
+        scene_capture, "capture_scene", lambda plotter, parallel_fov_deg: _fake_scene()
+    )
+    monkeypatch.setattr(clipboard, "copy_to_clipboard", lambda gvml, glb, image: None)
+    monkeypatch.setattr(clipboard, "screenshot_image", lambda plotter: None)
+    monkeypatch.setattr(plugin.sys, "platform", platform)
+
+    assert plugin.copy_to_powerpoint() is True
+    assert "Ctrl+V" not in ctx.messages[-1]
+    assert "needs Windows" in ctx.messages[-1] and "glTF (.glb)" in ctx.messages[-1]

@@ -173,3 +173,46 @@ def test_only_line_actors_are_marked_as_lines():
     assert marks == [False, True]
     wire = _actor(vtk.vtkSphereSource(), rep=1)
     assert scene_capture.is_line_actor(wire)
+
+
+def test_cell_colors_on_a_volume_dataset_are_kept():
+    """A DataSetMapper over tetrahedra exports the surface faces; their colors
+    used to be mapped on the volume cells, miscount, and fall back to flat gray."""
+    src = vtk.vtkPointSource()
+    src.SetNumberOfPoints(60)
+    src.SetRadius(1.0)
+    src.Update()
+    tets = vtk.vtkDelaunay3D()
+    tets.SetInputData(src.GetOutput())
+    tets.Update()
+    grid = tets.GetOutput()
+    values = vtk.vtkFloatArray()
+    values.SetName("v")
+    for i in range(grid.GetNumberOfCells()):
+        values.InsertNextValue(i % 2)
+    grid.GetCellData().SetScalars(values)
+    mapper = vtk.vtkDataSetMapper()
+    mapper.SetInputData(grid)
+    mapper.SetScalarRange(0, 1)
+    mapper.SetScalarModeToUseCellData()
+    actor = vtk.vtkActor()
+    actor.SetMapper(mapper)
+    actor.GetProperty().SetColor(0.5, 0.5, 0.5)
+    prims = scene_capture.capture_scene(FakePlotter({"grid": actor})).primitives
+    colors = {tuple(np.round(p.color, 3)) for p in prims}
+    assert (0.5, 0.5, 0.5, 1.0) not in colors
+    assert len(colors) == 2
+
+
+def test_view_up_parallel_to_the_view_direction_stays_finite():
+    plotter = FakePlotter({"s": _actor(vtk.vtkSphereSource())})
+    cam = plotter.renderer.GetActiveCamera()
+    cam.SetPosition(0, 0, 10)
+    cam.SetFocalPoint(0, 0, 0)
+    cam.SetViewUp(0, 0, 1)
+    rot = scene_capture.camera_frame(plotter)
+    assert np.isfinite(rot).all()
+    assert rot @ rot.T == pytest.approx(np.eye(3))
+    assert rot[2] == pytest.approx([0, 0, 1])  # back axis still points at the camera
+    (prim,) = scene_capture.capture_scene(plotter).primitives
+    assert np.isfinite(prim.positions).all()
