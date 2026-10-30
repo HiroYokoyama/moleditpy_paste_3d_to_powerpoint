@@ -16,20 +16,41 @@ plugin-specific code:
 - other meshes that plugins add to the 3D view.
 
 The model keeps the current viewing direction, colors, gloss and opacity. A parallel-projection
-view becomes a narrow (10°) perspective, because PowerPoint has only perspective cameras.
+view becomes a narrow perspective (10° by default), because PowerPoint has only perspective
+cameras.
 
 Text labels, 2D overlays, point sprites and volume renderings have no mesh and are left out. The
 status bar reports how many objects were skipped.
 
 ## Usage
 
-| Menu | What it does |
-|---|---|
-| **Export > Copy 3D to PowerPoint** | Puts the 3D view on the clipboard. Paste into PowerPoint with Ctrl+V. |
-| **Export > Export 3D Scene as glTF (.glb)...** | Saves the same model as a `.glb` file (PowerPoint: Insert > 3D Models > This Device). |
+| Where | Item | What it does |
+|---|---|---|
+| Export button / File > Export | **Copy 3D to PowerPoint** | Puts the 3D view on the clipboard. Paste into PowerPoint with Ctrl+V. |
+| Export button / File > Export | **Export 3D Scene as glTF (.glb)...** | Saves the model as a `.glb` file. To use it in PowerPoint, choose Insert > 3D Models > This Device. |
+| Settings | **Paste 3D to PowerPoint...** | Opens the settings window. |
 
-To make the structure spin, select the pasted model in PowerPoint and choose
-**Animations > Turntable**. Set **Repeat** to *Until End of Slide*.
+1. In MoleditPy, rotate the 3D view to the direction you want.
+2. Choose **Copy 3D to PowerPoint**.
+3. In PowerPoint, press Ctrl+V. You can drag the model to rotate it on the slide.
+4. To make it spin: select the model, choose **Animations > Turntable**, and set **Repeat** to
+   *Until End of Slide*. The animation is a slide setting, so the clipboard cannot carry it.
+
+## Settings
+
+Changes are saved immediately in `settings.json` beside the plugin and are used for every later
+copy.
+
+| Setting | Default | Notes |
+|---|---|---|
+| Light rig | Neutral white (key, fill, rim) | *PowerPoint default* is PowerPoint's own warm/cool studio rig. *Single white key light* gives flat, figure-like shading. |
+| Brightness | 100 % | Scales every light in the rig (10–300 %). |
+| Field of view for parallel projection | 10° | Smaller is flatter. Perspective views keep their own angle. |
+| Pasted size | 360 pt | Width and height of the pasted frame. |
+| Replace line color | Off (#404040) | Recolors tubes made from lines, so white unit-cell lines show on a white slide. Colored axis lines are recolored too. |
+
+The lighting, field of view and size go into the clipboard copy. A `.glb` file has no camera or
+lights, so it takes only the line color.
 
 ## How the paste works
 
@@ -37,7 +58,7 @@ The clipboard receives three formats, and the paste target uses the richest one 
 
 | Format | Used by |
 |---|---|
-| `Art::GVML ClipFormat` | PowerPoint and other Office apps. A 3D model with the camera and field of view set by the plugin. |
+| `Art::GVML ClipFormat` | PowerPoint and other Office apps. A 3D model with the camera, field of view and lights from the settings. |
 | `model/gltf-binary` | Apps that accept a bare glTF model. Uses the default camera. |
 | bitmap | Apps without 3D support. |
 
@@ -47,7 +68,10 @@ glTF exports look washed out in PowerPoint.
 ## Requirements
 
 - MoleditPy 5.x
-- The Office clipboard formats are Windows features. The `.glb` export works on every platform.
+- **Windows** for the clipboard copy. The Office clipboard formats used here are Windows names;
+  macOS Office uses different pasteboard types, which this version does not support. On macOS,
+  use **Export 3D Scene as glTF (.glb)...** and insert the file in PowerPoint. Slides made on
+  Windows play on Mac PowerPoint unchanged.
 
 ## License
 
