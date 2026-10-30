@@ -1,0 +1,19 @@
+{
+  "source": "paste_3d_to_powerpoint/__init__.py",
+  "title": "Paste 3D to PowerPoint",
+  "package": "paste_3d_to_powerpoint",
+  "archive": "paste_3d_to_powerpoint_{version}.zip",
+  "assets": [
+    "paste_3d_to_powerpoint_{version}.zip"
+  ],
+  "include": [
+    "README.md",
+    "LICENSE",
+    "COPYING",
+    "LICENSING.md"
+  ],
+  "exclude": [
+    "*/__pycache__/*",
+    "*/.git/*"
+  ]
+}
