@@ -5,7 +5,11 @@ CIF Viewer crystals, cube-file orbitals, other plugin overlays - on the
 clipboard in its current orientation, colors, gloss and transparency.  Paste
 it into PowerPoint with Ctrl+V and it arrives as a rotatable 3D model (add the
 Turntable animation for a spinning structure).  Export > "Export 3D Scene as
-glTF (.glb)..." writes the same model to a file.
+glTF (.glb)..." writes the same model to a file.  Settings > "Paste 3D to
+PowerPoint..." sets the lighting, field of view, pasted size and line color.
+
+The clipboard copy uses Windows Office clipboard formats; on other platforms
+use the .glb export.
 
 Source code, README, and full license (GNU GPL):
     https://github.com/HiroYokoyama/moleditpy_paste_3d_to_powerpoint
@@ -22,8 +26,9 @@ PLUGIN_NAME = "Paste 3D to PowerPoint"
 PLUGIN_VERSION = "0.1.0"
 PLUGIN_AUTHOR = "HiroYokoyama"
 PLUGIN_DESCRIPTION = (
-    "Copy the 3D view (molecules, crystals, orbitals) to the clipboard as a native "
-    "PowerPoint 3D model, or export it as glTF (.glb), keeping the on-screen style."
+    "Copy the 3D view (molecules, crystals, orbitals) as a native PowerPoint 3D "
+    "model via the Windows clipboard, with adjustable lighting, or export it as "
+    "glTF (.glb), keeping the on-screen style."
 )
 PLUGIN_CATEGORY = "Export"
 PLUGIN_TAGS = ["File", "Visualization"]
