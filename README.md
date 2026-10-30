@@ -1,9 +1,20 @@
 # Paste 3D to PowerPoint
 
+[![CI](https://github.com/HiroYokoyama/moleditpy_paste_3d_to_powerpoint/actions/workflows/test.yml/badge.svg)](https://github.com/HiroYokoyama/moleditpy_paste_3d_to_powerpoint/actions/workflows/test.yml)
+![Test Coverage](https://img.shields.io/badge/coverage->85%25-green)
+[![GitHub tag](https://img.shields.io/github/v/tag/HiroYokoyama/moleditpy_paste_3d_to_powerpoint?label=version)](https://github.com/HiroYokoyama/moleditpy_paste_3d_to_powerpoint/tags)
+[![GitHub Downloads](https://img.shields.io/github/downloads/HiroYokoyama/moleditpy_paste_3d_to_powerpoint/total)](https://github.com/HiroYokoyama/moleditpy_paste_3d_to_powerpoint/releases)
+![License](https://img.shields.io/badge/license-LGPL--3.0--or--later-blue)
+
 A [MoleditPy](https://github.com/HiroYokoyama/python_molecular_editor) plugin that copies the
 3D view to the clipboard as a **native PowerPoint 3D model**. Paste it with Ctrl+V and it can be
 rotated on the slide, and with the Turntable animation it spins during the slide show. It works
 offline, needs no add-in at presentation time and does not drive PowerPoint.
+
+![MoleditPy 3D view and the same scene pasted into PowerPoint](img/moleditpy_vs_powerpoint.png)
+
+*Top: the MoleditPy 3D view. Bottom: the same scene pasted into PowerPoint with the default
+settings. The crystal uses the line-color option, so the white unit cell shows on the slide.*
 
 ## What it exports
 
@@ -41,6 +52,8 @@ status bar reports how many objects were skipped.
 Changes are saved immediately in `settings.json` beside the plugin and are used for every later
 copy.
 
+![Settings window](img/settings_dialog.png)
+
 | Setting | Default | Notes |
 |---|---|---|
 | Light rig | Neutral white (key, fill, rim) | *PowerPoint default* is PowerPoint's own warm/cool studio rig. *Single white key light* gives flat, figure-like shading. |
@@ -48,6 +61,8 @@ copy.
 | Field of view for parallel projection | 10° | Smaller is flatter. Perspective views keep their own angle. |
 | Pasted size | 360 pt | Width and height of the pasted frame. |
 | Replace line color | Off (#404040) | Recolors tubes made from lines, so white unit-cell lines show on a white slide. Colored axis lines are recolored too. |
+
+![The three light rigs in PowerPoint](img/light_presets.png)
 
 The lighting, field of view and size go into the clipboard copy. A `.glb` file has no camera or
 lights, so it takes only the line color.
