@@ -24,7 +24,7 @@ import sys
 logger = logging.getLogger(__name__)
 
 PLUGIN_NAME = "Paste 3D to PowerPoint"
-PLUGIN_VERSION = "0.1.1"
+PLUGIN_VERSION = "1.0.0"
 PLUGIN_AUTHOR = "HiroYokoyama"
 PLUGIN_DESCRIPTION = (
     "Copy the 3D view as a native PowerPoint 3D model (Windows clipboard) "
