@@ -28,7 +28,7 @@ class FakeContext:
 
 def test_metadata():
     assert plugin.PLUGIN_NAME == "Paste 3D to PowerPoint"
-    assert plugin.PLUGIN_VERSION == "1.0.0"
+    assert plugin.PLUGIN_VERSION == "1.1.0"
     assert plugin.PLUGIN_SUPPORTED_MOLEDITPY_VERSION == ">=5.0.0, <6.0.0"
     assert isinstance(plugin.PLUGIN_TAGS, list) and plugin.PLUGIN_TAGS
     assert not hasattr(plugin, "run"), "run() would add a duplicate Plugins-menu entry"
