@@ -9,9 +9,9 @@
 A [MoleditPy](https://github.com/HiroYokoyama/python_molecular_editor) plugin that copies the
 3D view to the clipboard as a **native PowerPoint 3D model**. Paste it with Ctrl+V and it can be
 rotated on the slide, and with the Turntable animation it spins during the slide show. It works
-offline, needs no add-in at presentation time and does not drive PowerPoint. The same model can
-also be exported as a glTF (`.glb`) file for PowerPoint's Insert > 3D Models or any other glTF
-viewer.
+offline, needs no add-in at presentation time and does not drive PowerPoint. To save the model
+as a glTF file instead, for PowerPoint's Insert > 3D Models or any other glTF viewer, use the
+separate [glTF Exporter](https://github.com/HiroYokoyama/moleditpy_gltf_exporter) plugin.
 
 ![MoleditPy 3D view and the same scene pasted into PowerPoint](img/moleditpy_vs_powerpoint.png)
 
@@ -40,7 +40,6 @@ status bar reports how many objects were skipped.
 | Where | Item | What it does |
 |---|---|---|
 | Export button / File > Export | **Copy 3D to PowerPoint** | Puts the 3D view on the clipboard. Paste into PowerPoint with Ctrl+V. |
-| Export button / File > Export | **Export 3D Scene as glTF (.glb)...** | Saves the model as a `.glb` file. To use it in PowerPoint, choose Insert > 3D Models > This Device. |
 | Settings | **Paste 3D to PowerPoint...** | Opens the settings window. |
 
 1. In MoleditPy, rotate the 3D view to the direction you want.
@@ -66,8 +65,7 @@ copy.
 
 ![The three light rigs in PowerPoint](img/light_presets.png)
 
-The lighting, field of view and size go into the clipboard copy. A `.glb` file has no camera or
-lights, so it takes only the line color.
+The lighting, field of view and size go into the clipboard copy.
 
 ## How the paste works
 
@@ -80,14 +78,14 @@ The clipboard receives three formats, and the paste target uses the richest one 
 | bitmap | Apps without 3D support. |
 
 Colors are converted from sRGB to the linear values glTF requires. Without this conversion,
-glTF exports look washed out in PowerPoint.
+glTF models look washed out in PowerPoint.
 
 ## Requirements
 
 - MoleditPy 5.x
 - **Windows** for the clipboard copy. The Office clipboard formats used here are Windows names;
   macOS Office uses different pasteboard types, which this version does not support. On macOS,
-  use **Export 3D Scene as glTF (.glb)...** and insert the file in PowerPoint. Slides made on
+  save a `.glb` with the [glTF Exporter](https://github.com/HiroYokoyama/moleditpy_gltf_exporter) plugin and insert the file in PowerPoint. Slides made on
   Windows play on Mac PowerPoint unchanged.
 
 ## License

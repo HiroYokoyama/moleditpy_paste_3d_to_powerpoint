@@ -4,12 +4,11 @@ Export > "Copy 3D to PowerPoint" puts whatever the 3D view shows - molecules,
 CIF Viewer crystals, cube-file orbitals, other plugin overlays - on the
 clipboard in its current orientation, colors, gloss and transparency.  Paste
 it into PowerPoint with Ctrl+V and it arrives as a rotatable 3D model (add the
-Turntable animation for a spinning structure).  Export > "Export 3D Scene as
-glTF (.glb)..." writes the same model to a file.  Settings > "Paste 3D to
+Turntable animation for a spinning structure).  Settings > "Paste 3D to
 PowerPoint..." sets the lighting, field of view, pasted size and line color.
 
-The clipboard copy uses Windows Office clipboard formats; on other platforms
-use the .glb export.
+The clipboard copy uses Windows Office clipboard formats.  To save the model
+as a file, on any platform, use the separate glTF Exporter plugin.
 
 Source code, README, and full license (GNU GPL):
     https://github.com/HiroYokoyama/moleditpy_paste_3d_to_powerpoint
@@ -18,17 +17,15 @@ see the LICENSE file in the repository above for the full terms.
 """
 
 import logging
-import os
 import sys
 
 logger = logging.getLogger(__name__)
 
 PLUGIN_NAME = "Paste 3D to PowerPoint"
-PLUGIN_VERSION = "1.0.0"
+PLUGIN_VERSION = "1.1.0"
 PLUGIN_AUTHOR = "HiroYokoyama"
 PLUGIN_DESCRIPTION = (
-    "Copy the 3D view as a native PowerPoint 3D model (Windows clipboard) "
-    "or export it as glTF (.glb)."
+    "Copy the 3D view as a native PowerPoint 3D model (Windows clipboard)."
 )
 PLUGIN_CATEGORY = "Export"
 PLUGIN_TAGS = ["File", "Visualization"]
@@ -38,7 +35,7 @@ PLUGIN_SUPPORTED_MOLEDITPY_VERSION = ">=5.0.0, <6.0.0"
 PLUGIN_SUPPORTED_PYTHON_VERSION = ">=3.9, <3.15"
 
 COPY_LABEL = "Copy 3D to PowerPoint"
-EXPORT_LABEL = "Export 3D Scene as glTF (.glb)..."
+GLTF_EXPORTER = "glTF Exporter"
 SETTINGS_MENU_PATH = "Settings/Paste 3D to PowerPoint..."
 WINDOW_ID = "paste_3d_to_powerpoint_settings"
 
@@ -138,51 +135,9 @@ def copy_to_powerpoint(*_args) -> bool:
         # Ctrl+V in PowerPoint here would paste just the bitmap.
         _status(
             "3D model copied as glTF; pasting it into PowerPoint as a 3D model needs "
-            f"Windows - use {EXPORT_LABEL.rstrip('.')} instead" + _skipped_note(scene)
+            f"Windows - save a .glb with the {GLTF_EXPORTER} plugin and insert it instead"
+            + _skipped_note(scene)
         )
-    return True
-
-
-def _default_glb_path() -> str:
-    mw = _context.get_main_window() if _context is not None else None
-    init_manager = getattr(mw, "init_manager", None)
-    current = getattr(init_manager, "current_file_path", None)
-    if current:
-        return os.path.splitext(current)[0] + ".glb"
-    return os.path.join(os.path.expanduser("~"), "molecule.glb")
-
-
-def export_glb(*_args) -> bool:
-    """Export-menu action: write the 3D view to a .glb file."""
-    from PySide6.QtWidgets import QFileDialog
-
-    from .gltf_writer import build_glb
-
-    parent = _context.get_main_window() if _context is not None else None
-    path, _ = QFileDialog.getSaveFileName(
-        parent,
-        EXPORT_LABEL.rstrip("."),
-        _default_glb_path(),
-        "glTF Binary (*.glb);;All Files (*)",
-    )
-    if not path:
-        return False
-    if not path.lower().endswith(".glb"):
-        path += ".glb"
-    scene, _plotter = _capture()
-    if scene is None:
-        return False
-    try:
-        data = build_glb(
-            scene.primitives, generator=f"MoleditPy {PLUGIN_NAME} {PLUGIN_VERSION}"
-        )
-        with open(path, "wb") as fh:
-            fh.write(data)
-    except Exception as exc:
-        logger.exception("%s: export failed", PLUGIN_NAME)
-        _warn(PLUGIN_NAME, f"Could not write {path}:\n{exc}")
-        return False
-    _status(f"3D scene exported to {path}" + _skipped_note(scene))
     return True
 
 
@@ -207,10 +162,9 @@ def open_settings(*_args) -> None:
 
 
 def initialize(context):
-    """Copy and glTF export go to the Export menu, the settings to the Settings menu."""
+    """The copy goes to the Export menu, the settings to the Settings menu."""
     global _context
     _context = context
     current_settings.clear()
     context.add_export_action(COPY_LABEL, copy_to_powerpoint)
-    context.add_export_action(EXPORT_LABEL, export_glb)
     context.add_menu_action(SETTINGS_MENU_PATH, open_settings)

@@ -1,6 +1,5 @@
 import io
 import zipfile
-from types import SimpleNamespace
 
 import pytest
 
@@ -35,15 +34,11 @@ def test_metadata():
     assert not hasattr(plugin, "run"), "run() would add a duplicate Plugins-menu entry"
 
 
-def test_initialize_registers_the_export_actions():
+def test_initialize_registers_only_the_copy_action():
+    """The file export moved to the glTF Exporter plugin."""
     ctx = FakeContext()
     plugin.initialize(ctx)
-    assert [label for label, _ in ctx.export_actions] == [
-        plugin.COPY_LABEL,
-        plugin.EXPORT_LABEL,
-    ]
-    assert ctx.export_actions[0][1] is plugin.copy_to_powerpoint
-    assert ctx.export_actions[1][1] is plugin.export_glb
+    assert ctx.export_actions == [(plugin.COPY_LABEL, plugin.copy_to_powerpoint)]
     # Settings live in the menu bar's Settings menu, not in the Export button.
     assert ctx.menu_actions == [
         ("Settings/Paste 3D to PowerPoint...", plugin.open_settings)
@@ -153,51 +148,9 @@ def test_settings_window_is_a_singleton(monkeypatch, qapp):
     first.close()
 
 
-def test_export_writes_glb(monkeypatch, tmp_path):
-    pytest.importorskip("PySide6")
-    from PySide6 import QtWidgets
-
-    from paste_3d_to_powerpoint import scene_capture
-
-    ctx = FakeContext(plotter=object())
-    plugin.initialize(ctx)
-    monkeypatch.setattr(
-        scene_capture, "capture_scene", lambda plotter, parallel_fov_deg: _fake_scene()
-    )
-    target = tmp_path / "out"
-    monkeypatch.setattr(
-        QtWidgets.QFileDialog,
-        "getSaveFileName",
-        staticmethod(lambda *a, **k: (str(target), "")),
-    )
-    assert plugin.export_glb() is True
-    assert (tmp_path / "out.glb").read_bytes()[:4] == b"glTF"
-
-
-def test_export_cancelled_does_nothing(monkeypatch):
-    pytest.importorskip("PySide6")
-    from PySide6 import QtWidgets
-
-    plugin.initialize(FakeContext(plotter=object()))
-    monkeypatch.setattr(
-        QtWidgets.QFileDialog, "getSaveFileName", staticmethod(lambda *a, **k: ("", ""))
-    )
-    assert plugin.export_glb() is False
-
-
-def test_default_path_follows_the_open_file(monkeypatch):
-    ctx = FakeContext()
-    mw = SimpleNamespace(
-        init_manager=SimpleNamespace(current_file_path="C:/work/benzene.pmeprj")
-    )
-    ctx.get_main_window = lambda: mw
-    plugin.initialize(ctx)
-    assert plugin._default_glb_path().replace("\\", "/") == "C:/work/benzene.glb"
-
-
 @pytest.mark.parametrize("platform", ["darwin", "linux"])
 def test_copy_off_windows_does_not_promise_a_powerpoint_paste(monkeypatch, platform):
-    """Only the Windows clipboard carries the Office format; elsewhere point to .glb."""
+    """Only the Windows clipboard carries the Office format; elsewhere point to glTF Exporter."""
     from paste_3d_to_powerpoint import clipboard, scene_capture
 
     ctx = FakeContext(plotter=object())
@@ -211,4 +164,4 @@ def test_copy_off_windows_does_not_promise_a_powerpoint_paste(monkeypatch, platf
 
     assert plugin.copy_to_powerpoint() is True
     assert "Ctrl+V" not in ctx.messages[-1]
-    assert "needs Windows" in ctx.messages[-1] and "glTF (.glb)" in ctx.messages[-1]
+    assert "needs Windows" in ctx.messages[-1] and "glTF Exporter" in ctx.messages[-1]
